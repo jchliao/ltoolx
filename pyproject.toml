@@ -1,11 +1,12 @@
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
 [project]
-name = "ltoolz"
+name = "ltoolx"
 version = "0.0.1"
 authors = [
-  { name="chfouro" },
+  { name="jchl" },
 ]
 description = "Common tool packaging"
 readme = "README.md"
@@ -13,8 +14,12 @@ requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
 ]
-requires = [
-  "bs4",
-  
+dependencies = [
+  "beautifulsoup4",
+  "pywin32",
+  "matplotlib",
+  "numpy",
+  "gurobipy",
 ]
