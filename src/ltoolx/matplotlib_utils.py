@@ -10,3 +10,6 @@ config = {
 plt.rcParams.update(config)
 import matplotlib_inline
 matplotlib_inline.backend_inline.set_matplotlib_formats('svg')
+
+def cm(*args):
+    return tuple(x / 2.54 for x in args)

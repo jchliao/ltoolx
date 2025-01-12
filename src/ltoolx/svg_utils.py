@@ -9,7 +9,6 @@ class Svg:
     visio = None
     def __init__(self,svg_path):
         self.svg_path = Path(svg_path).resolve()
-
     def to_vsd(self,vsdx_path = None,clipboard = False):
         if vsdx_path is None:
             vsdx_path = self.svg_path.with_suffix(".vsdx")
@@ -40,6 +39,7 @@ class Svg:
                 print(f"Error while closing Visio: {e}")
             finally:
                 cls.visio = None  # 清理Visio实例
+
 import copy
 import matplotlib_inline
 from matplotlib.figure import Figure
@@ -54,21 +54,24 @@ class Fig:
         fig.savefig(svg_buffer, **kwargs)
         svg_buffer.seek(0)
         svg_content = svg_buffer.read()
-        cleaned_svg_window = _svg_windows(svg_content)
-
-        bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-        ax.set_axis_off()
-        if ax.get_legend():
-            ax.get_legend().remove()
-        kwargs['bbox_inches'] = bbox
-        svg_buffer = io.BytesIO()
-        fig.savefig(svg_buffer, **kwargs)
-        svg_buffer.seek(0)
-        svg_content = svg_buffer.read()
-        svg_content = _svg_content(svg_content)
-        combined_svg_content = _combined_svg(cleaned_svg_window,svg_content)
+        cleaned_svg_window,flag_out = _svg_windows(svg_content)
+        
+        if flag_out is False:
+            combined_svg_content = cleaned_svg_window
+        else:
+            bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+            ax.set_axis_off()
+            if ax.get_legend():
+                ax.get_legend().remove()
+            kwargs['bbox_inches'] = bbox
+            svg_buffer = io.BytesIO()
+            fig.savefig(svg_buffer, **kwargs)
+            svg_buffer.seek(0)
+            svg_content = svg_buffer.read()
+            svg_content = _svg_content(svg_content)
+            combined_svg_content = _combined_svg(cleaned_svg_window,svg_content)
         combined_svg_content = _svg_clean(combined_svg_content)
-
+        plt.close(fig)
         fname = Path(args[0]).with_suffix(".svg")
         with open(fname, 'w', encoding='utf-8') as file:
             file.write(combined_svg_content)
@@ -94,13 +97,14 @@ def _svg_clean(svg_content):
     cleaned_svg_content = soup.prettify()
     return cleaned_svg_content
 
-# 删除svg不必要数据
 def _svg_windows(svg_content):
     soup = BeautifulSoup(svg_content, 'xml')
+    flag_out = False
     for g_tag in soup.find_all('g', id='out'):
         g_tag.decompose()
+        flag_out = True
     cleaned_svg_content = soup.prettify()
-    return cleaned_svg_content
+    return cleaned_svg_content,flag_out
 
 def _svg_content(svg_content):
     soup = BeautifulSoup(svg_content, 'xml')
