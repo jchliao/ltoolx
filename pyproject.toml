@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ltoolx"
-version = "0.0.1"
+version = "0.0.2"
 authors = [
   { name="jchl" },
 ]
@@ -18,8 +18,9 @@ classifiers = [
 ]
 dependencies = [
   "beautifulsoup4",
-  "pywin32",
   "matplotlib",
   "numpy",
   "gurobipy",
 ]
+[project.optional-dependencies]
+svg = ["pywin32"]
