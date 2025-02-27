@@ -109,18 +109,19 @@ def _svg_windows(svg_content):
 def _svg_content(svg_content):
     soup = BeautifulSoup(svg_content, 'xml')
     svg_root = soup.find('svg')
+    viewbox = svg_root.get("viewBox").split()
+    width = float(viewbox[2])
+    height = float(viewbox[3])
     out_elements = soup.find_all('g', id='out')
+
     svg_root.clear()
     if len(out_elements) == 0:
         return str(soup)
     for out_element in out_elements:
         # 处理线
         for path_tag in out_element.find_all('path'):
-            # style = path_tag.get('style', '')
-            # if 'stroke-linecap' in style:
-            #     style = style.replace('stroke-linecap: square', 'stroke-linecap: butt')
-            #     path_tag['style'] = style
-            modify_line_path(path_tag)
+            if path_tag.get("clip-path") != None:
+                modify_line_path(path_tag)
         # 处理点
         all_g = path_tag.find_all("g")
         for g_tag in all_g:
@@ -129,8 +130,9 @@ def _svg_content(svg_content):
                 for use_tag in g_tag.find_all('use'):
                     x = use_tag.get('x')
                     y = use_tag.get('y')
+                    if x < 0 or x > width or y < 0 or y > height:
+                        use_tag.decompose()
                     
-                    pass
 
     ax_group = soup.new_tag('g', id='ax')
     for out_element in out_elements:
@@ -188,21 +190,22 @@ def modify_line_path(path_element):
         g.append(line)
     
     # 替换原来的 path 元素
-    print(g)
+    # print(g)
     path_element.replace_with(g)
     return g
 
 
 if __name__ == "__main__":
     import matplotlib_utils
-    plt.plot([1,2,3],[3,2,4])
-    plt.plot([1,2,3],[5,15,3],gid='out')
-    plt.ylim([0,10])
-    savefig("test1.svg").to_vsd(clipboard=True).exit()
+    plt.plot([1,2,3],[8,15,4],marker="s")
+    plt.plot([1,2,3],[5,15,3],gid='out',linestyle="--",marker="o")
+    plt.xlim([0.5,2.5])
+    plt.ylim([7,9])
+    savefig("test1.svg")
 
-    fig,ax = plt.subplots()
-    ax.plot([1,2,3],[3,2,4],label='inax')
-    ax.plot([1,2,3],[5,15,3],label='outax',gid='out')
-    ax.set_ylim([0,10])
-    ax.legend()
-    Fig(fig).savefig("test2.svg").to_vsd(clipboard=True).exit()
+    # fig,ax = plt.subplots()
+    # ax.plot([1,2,3],[3,2,4],label='inax')
+    # ax.plot([1,2,3],[5,15,3],label='outax',gid='out')
+    # ax.set_ylim([0,10])
+    # ax.legend()
+    # Fig(fig).savefig("test2.svg")
