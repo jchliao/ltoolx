@@ -54,6 +54,7 @@ class Fig:
         fig.savefig(svg_buffer, **kwargs)
         svg_buffer.seek(0)
         svg_content = svg_buffer.read()
+        
         cleaned_svg_window,flag_out = _svg_windows(svg_content)
         
         if flag_out is False:
@@ -71,10 +72,13 @@ class Fig:
             svg_content = _svg_content(svg_content)
             combined_svg_content = _combined_svg(cleaned_svg_window,svg_content)
         combined_svg_content = _svg_clean(combined_svg_content)
+        # 坐标轴修改为线段
+        combined_svg = modify_axis(str(combined_svg_content))
+
         plt.close(fig)
         fname = Path(args[0]).with_suffix(".svg")
         with open(fname, 'w', encoding='utf-8') as file:
-            file.write(combined_svg_content)
+            file.write(combined_svg)
         return Svg(fname)
 
 # 删除svg不必要数据
@@ -123,16 +127,18 @@ def _svg_content(svg_content):
             if path_tag.get("clip-path") != None:
                 modify_line_path(path_tag)
         # 处理点
-        all_g = path_tag.find_all("g")
+        all_g = out_element.find_all("g")
         for g_tag in all_g:
-            # 刚才那部给线加了id，无id的g包含点
-            if g_tag.get('id') == None:
+            # 刚才那步给线加了id，无id的另一个g就包含点了
+            if g_tag.get('clip-path') != None:
+                # print(g_tag)
                 for use_tag in g_tag.find_all('use'):
-                    x = use_tag.get('x')
-                    y = use_tag.get('y')
+                    
+                    x = float(use_tag.get('x'))
+                    y = float(use_tag.get('y'))
+                    
                     if x < 0 or x > width or y < 0 or y > height:
                         use_tag.decompose()
-                    
 
     ax_group = soup.new_tag('g', id='ax')
     for out_element in out_elements:
@@ -190,17 +196,38 @@ def modify_line_path(path_element):
         g.append(line)
     
     # 替换原来的 path 元素
-    # print(g)
     path_element.replace_with(g)
     return g
 
+def modify_axis(content:str):
+    """
+    修改指定坐标轴的路径为线段,只能结合axisartist一起使用
+    """
+    soup = BeautifulSoup(content, 'xml')
+    svg_root = soup.find('svg')
+    # 只修改这两个轴
+    axis_id_list = ["mpl_toolkits.axisartist.axis_artist_1","mpl_toolkits.axisartist.axis_artist_2","mpl_toolkits.axisartist.axis_artist_3","mpl_toolkits.axisartist.axis_artist_4"]
+    for g_tag in svg_root.find_all("g"):
+        if g_tag.get("id") in axis_id_list:
+            for axis_path_tag in g_tag.find_all("path"):
+                if axis_path_tag.get("id") == None:
+                    re = modify_line_path(axis_path_tag)
+                    # axis_path_tag.replace_with(re)
+    return str(soup)
 
 if __name__ == "__main__":
     import matplotlib_utils
+    import mpl_toolkits.axisartist as AA
+    plt.axes(axes_class=AA.Axes)
     plt.plot([1,2,3],[8,15,4],marker="s")
     plt.plot([1,2,3],[5,15,3],gid='out',linestyle="--",marker="o")
     plt.xlim([0.5,2.5])
     plt.ylim([7,9])
+    # 隐藏顶部和右侧边框
+    # plt.axis["top"].set_visible(False)  # type: ignore
+    # plt.axis["right"].set_visible(False)  # type: ignore
+    # plt.axis["left"].set_axisline_style("-")  # type: ignore
+    # plt.axis["bottom"].set_axisline_style("-")  # type: ignore
     savefig("test1.svg")
 
     # fig,ax = plt.subplots()
