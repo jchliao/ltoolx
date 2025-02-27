@@ -1,4 +1,4 @@
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup,Tag
 from matplotlib.pyplot import gcf
 import io
 from pathlib import Path
@@ -114,11 +114,24 @@ def _svg_content(svg_content):
     if len(out_elements) == 0:
         return str(soup)
     for out_element in out_elements:
+        # 处理线
         for path_tag in out_element.find_all('path'):
-            style = path_tag.get('style', '')
-            if 'stroke-linecap' in style:
-                style = style.replace('stroke-linecap: square', 'stroke-linecap: butt')
-                path_tag['style'] = style
+            # style = path_tag.get('style', '')
+            # if 'stroke-linecap' in style:
+            #     style = style.replace('stroke-linecap: square', 'stroke-linecap: butt')
+            #     path_tag['style'] = style
+            modify_line_path(path_tag)
+        # 处理点
+        all_g = path_tag.find_all("g")
+        for g_tag in all_g:
+            # 刚才那部给线加了id，无id的g包含点
+            if g_tag.get('id') == None:
+                for use_tag in g_tag.find_all('use'):
+                    x = use_tag.get('x')
+                    y = use_tag.get('y')
+                    
+                    pass
+
     ax_group = soup.new_tag('g', id='ax')
     for out_element in out_elements:
         ax_group.append(out_element.extract())
@@ -141,6 +154,44 @@ def _combined_svg(window,content):
 def savefig(*args,**kwargs) -> Svg:
     fig = gcf()
     return Fig(fig).savefig(*args,**kwargs)
+
+def modify_line_path(path_element):
+    # print(path_element)
+    # 获取 d 属性的内容并分割成列表
+    if path_element.name != 'path':
+        path_element = path_element.find('path')
+    points = path_element.get("d").split()
+    num_points = int(len(points) / 3)
+    # 移除 M 或 L 指令，只保留坐标点
+    points = [point for point in points if point not in ('M', 'L')]
+    
+    # 如果点数不是偶数，则无法形成有效的线段
+    if len(points) % 2 != 0:
+        raise ValueError("The number of points is not even, cannot form valid line segments.")
+    style = path_element.get('style', '')
+    if 'stroke-linecap' in style:
+        style = style.replace('stroke-linecap: square', 'stroke-linecap: butt')
+    # 创建一个新的 g 元素
+    g = Tag(name='g')
+    g['clip-path'] = path_element.get("clip-path")
+    g['style'] = style
+    g["id"] = "line-id"
+    
+    # 生成 line 元素
+    for i in range(0, num_points-1):
+        x1, y1, x2, y2 = points[2*i:2*i+4]
+        line = Tag(name='line')
+        line['x1'] = x1
+        line['y1'] = y1
+        line['x2'] = x2
+        line['y2'] = y2
+        g.append(line)
+    
+    # 替换原来的 path 元素
+    print(g)
+    path_element.replace_with(g)
+    return g
+
 
 if __name__ == "__main__":
     import matplotlib_utils
