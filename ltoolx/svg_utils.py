@@ -77,12 +77,12 @@ class Fig:
             combined_svg_content = _combined_svg(cleaned_svg_window, svg_content)
         combined_svg_content = _svg_clean(combined_svg_content)
         # 坐标轴修改为线段
-        combined_svg = modify_axis(str(combined_svg_content))
+        # combined_svg_content = modify_axis(str(combined_svg_content))
 
         plt.close(fig)
         fname = Path(args[0]).with_suffix(".svg")
         with open(fname, "w", encoding="utf-8") as file:
-            file.write(combined_svg)
+            file.write(combined_svg_content)
         return Svg(fname)
 
 
@@ -134,18 +134,24 @@ def _svg_content(svg_content):
         # 处理线
         for path_tag in out_element.find_all("path"):
             if path_tag.get("clip-path") is not None:
-                modify_line_path(path_tag)
-        # 处理点
-        all_g = out_element.find_all("g")
-        for g_tag in all_g:
-            # 刚才那步给线加了id，无id的另一个g就包含点了
-            if g_tag.get("clip-path") is not None:
-                for use_tag in g_tag.find_all("use"):
-                    x = float(use_tag.get("x"))
-                    y = float(use_tag.get("y"))
+                style = path_tag.get("style", "")
+                if "stroke-linecap" in style:
+                    style = style.replace(
+                        "stroke-linecap: square", "stroke-linecap: butt"
+                    )
+                    path_tag["style"] = style
+                # modify_line_path(path_tag)
 
-                    if x < 0 or x > width or y < 0 or y > height:
-                        use_tag.decompose()
+        # # 处理点
+        # all_g = out_element.find_all("g")
+        # for g_tag in all_g:
+        #     # 刚才那步给线加了id，无id的另一个g就包含点了
+        #     if g_tag.get("clip-path") is not None:
+        #         for use_tag in g_tag.find_all("use"):
+        #             x = float(use_tag.get("x"))
+        #             y = float(use_tag.get("y"))
+        #             if x < 0 or x > width or y < 0 or y > height:
+        #                 use_tag.decompose()
 
     ax_group = soup.new_tag("g", id="ax")
     for out_element in out_elements:
@@ -236,21 +242,22 @@ def modify_axis(content: str):
 
 
 if __name__ == "__main__":
+    from ltoolx.matplotlib_utils import *
     import mpl_toolkits.axisartist as AA
 
     plt.axes(axes_class=AA.Axes)
-    plt.plot([1, 2, 3], [8, 15, 4], marker="s")
-    plt.plot([1, 2, 3], [5, 15, 3], gid="out", linestyle="--", marker="o")
+    plt.plot([1, 2, 3], [3, 2, 4], label="inax", marker="s")
+    plt.plot(
+        [1, 2, 3], [5, 15, 3], gid="out", label="outax", linestyle="--", marker="o"
+    )
     plt.xlim([1.25, 3])
-    plt.ylim([6, 9])
-    # 隐藏顶部和右侧边框
-    # plt.axis["top"].set_visible(False)  # type: ignore
-    # plt.axis["right"].set_visible(False)  # type: ignore
-    # plt.axis["left"].set_axisline_style("-")  # type: ignore
-    # plt.axis["bottom"].set_axisline_style("-")  # type: ignore
+    plt.ylim([4.0, 10.0])
+    plt.legend()
+
     savefig("test1.svg")
 
-    # fig,ax = plt.subplots()
+    # fig= plt.figure()
+    # ax = fig.add_subplot(axes_class=AA.Axes)
     # ax.plot([1,2,3],[3,2,4],label='inax')
     # ax.plot([1,2,3],[5,15,3],label='outax',gid='out')
     # ax.set_ylim([0,10])
