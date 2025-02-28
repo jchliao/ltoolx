@@ -77,8 +77,7 @@ class Fig:
             combined_svg_content = _combined_svg(cleaned_svg_window, svg_content)
         combined_svg_content = _svg_clean(combined_svg_content)
         # 坐标轴修改为线段
-        # combined_svg_content = modify_axis(str(combined_svg_content))
-
+        combined_svg_content = modify_axis(str(combined_svg_content))
         plt.close(fig)
         fname = Path(args[0]).with_suffix(".svg")
         with open(fname, "w", encoding="utf-8") as file:
@@ -113,7 +112,13 @@ def _svg_windows(svg_content):
     soup = BeautifulSoup(svg_content, "xml")
     flag_out = False
     for g_tag in soup.find_all("g", id="out"):
-        g_tag.decompose()
+        # 保留path标签，删除其他标签
+        path_tag_tmp = Tag(name="path")
+        for path_tag in g_tag.find_all("path"):
+            if path_tag.get("id") is not None:
+                path_tag_tmp = path_tag.copy_self()
+                break
+        g_tag.replace_with(path_tag_tmp)
         flag_out = True
     cleaned_svg_content = soup.prettify()
     return cleaned_svg_content, flag_out
@@ -126,7 +131,7 @@ def _svg_content(svg_content):
     width = float(viewbox[2])
     height = float(viewbox[3])
     out_elements = soup.find_all("g", id="out")
-
+    out_point_defs_id = []
     svg_root.clear()
     if len(out_elements) == 0:
         return str(soup)
@@ -134,24 +139,22 @@ def _svg_content(svg_content):
         # 处理线
         for path_tag in out_element.find_all("path"):
             if path_tag.get("clip-path") is not None:
-                style = path_tag.get("style", "")
-                if "stroke-linecap" in style:
-                    style = style.replace(
-                        "stroke-linecap: square", "stroke-linecap: butt"
-                    )
-                    path_tag["style"] = style
-                # modify_line_path(path_tag)
+                modify_line_path(path_tag)
+            # 无clip-path的元素为描述点图例的路径定义
+            # 这里默认直接读取，若图例不包含点则为空字符串
+            path_tag.get("id", "")
+            out_point_defs_id.append(path_tag.get("id", ""))
 
-        # # 处理点
-        # all_g = out_element.find_all("g")
-        # for g_tag in all_g:
-        #     # 刚才那步给线加了id，无id的另一个g就包含点了
-        #     if g_tag.get("clip-path") is not None:
-        #         for use_tag in g_tag.find_all("use"):
-        #             x = float(use_tag.get("x"))
-        #             y = float(use_tag.get("y"))
-        #             if x < 0 or x > width or y < 0 or y > height:
-        #                 use_tag.decompose()
+        # 处理点
+        all_g = out_element.find_all("g")
+        for g_tag in all_g:
+            # 刚才那步给线加了id，无id的另一个g就包含点了
+            if g_tag.get("clip-path") is not None:
+                for use_tag in g_tag.find_all("use"):
+                    x = float(use_tag.get("x"))
+                    y = float(use_tag.get("y"))
+                    if x < 0 or x > width or y < 0 or y > height:
+                        use_tag.decompose()
 
     ax_group = soup.new_tag("g", id="ax")
     for out_element in out_elements:
@@ -246,7 +249,7 @@ if __name__ == "__main__":
     import mpl_toolkits.axisartist as AA
 
     plt.axes(axes_class=AA.Axes)
-    plt.plot([1, 2, 3], [3, 2, 4], label="inax", marker="s")
+    plt.plot([1, 2, 3], [3, 5, 4], label="inax", marker="s")
     plt.plot(
         [1, 2, 3], [5, 15, 3], gid="out", label="outax", linestyle="--", marker="o"
     )
