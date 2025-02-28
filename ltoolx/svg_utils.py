@@ -4,6 +4,8 @@ import io
 from pathlib import Path
 import win32com.client
 import matplotlib.pyplot as plt
+import copy
+from matplotlib.figure import Figure
 
 
 class Svg:
@@ -42,11 +44,6 @@ class Svg:
                 print(f"Error while closing Visio: {e}")
             finally:
                 cls.visio = None  # 清理Visio实例
-
-
-import copy
-import matplotlib_inline
-from matplotlib.figure import Figure
 
 
 class Fig:
@@ -136,14 +133,13 @@ def _svg_content(svg_content):
     for out_element in out_elements:
         # 处理线
         for path_tag in out_element.find_all("path"):
-            if path_tag.get("clip-path") != None:
+            if path_tag.get("clip-path") is not None:
                 modify_line_path(path_tag)
         # 处理点
         all_g = out_element.find_all("g")
         for g_tag in all_g:
             # 刚才那步给线加了id，无id的另一个g就包含点了
-            if g_tag.get("clip-path") != None:
-                # print(g_tag)
+            if g_tag.get("clip-path") is not None:
                 for use_tag in g_tag.find_all("use"):
                     x = float(use_tag.get("x"))
                     y = float(use_tag.get("y"))
@@ -234,14 +230,12 @@ def modify_axis(content: str):
     for g_tag in svg_root.find_all("g"):
         if g_tag.get("id") in axis_id_list:
             for axis_path_tag in g_tag.find_all("path"):
-                if axis_path_tag.get("id") == None:
-                    re = modify_line_path(axis_path_tag)
-                    # axis_path_tag.replace_with(re)
+                if axis_path_tag.get("id") is None:
+                    modify_line_path(axis_path_tag)
     return str(soup)
 
 
 if __name__ == "__main__":
-    import matplotlib_utils
     import mpl_toolkits.axisartist as AA
 
     plt.axes(axes_class=AA.Axes)
