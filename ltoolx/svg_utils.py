@@ -117,8 +117,11 @@ def _svg_windows(svg_content):
         for path_tag in g_tag.find_all("path"):
             if path_tag.get("id") is not None:
                 path_tag_tmp = path_tag.copy_self()
+                defs_tag = Tag(name="defs")
+                defs_tag.append(path_tag_tmp)
+                print(defs_tag)
                 break
-        g_tag.replace_with(path_tag_tmp)
+        g_tag.replace_with(defs_tag)
         flag_out = True
     cleaned_svg_content = soup.prettify()
     return cleaned_svg_content, flag_out
