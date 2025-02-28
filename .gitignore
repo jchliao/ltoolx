@@ -1,7 +1,6 @@
 dist/
 *.svg
 *.pyc
-*.lock
 *.bak
 *.vsdx
 __pycache__
