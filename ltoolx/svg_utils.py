@@ -183,7 +183,7 @@ def modify_line_path(path_element):
     points = path_element.get("d").split()
     num_points = int(len(points) / 3)
     # 移除 M 或 L 指令，只保留坐标点
-    points = [point for point in points if point not in ("M", "L")]
+    points = [point for point in points if point not in ("M", "L", "z")]
 
     # 如果点数不是偶数，则无法形成有效的线段
     if len(points) % 2 != 0:
