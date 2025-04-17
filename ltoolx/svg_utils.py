@@ -203,7 +203,9 @@ def modify_line_path(path_element):
         )
     style = path_element.get("style", "")
     if "stroke-linecap" in style:
-        style = style.replace("stroke-linecap: square", "stroke-linecap: butt")
+        style = style.replace("stroke-linecap: square", "stroke-linecap: round")
+    else:
+        style += "stroke-linecap: round;"
     # 创建一个新的 g 元素
     g = Tag(name="g")
     g["clip-path"] = path_element.get("clip-path")
@@ -253,8 +255,9 @@ if __name__ == "__main__":
     plt.axes(axes_class=AA.Axes)
     plt.plot([1, 2, 3], [3, 5, 4], label="inax", marker="s")
     plt.plot(
-        [1, 2, 3], [5, 15, 3], gid="out", label="outax", linestyle="--"
+        [1, 2, 3], [5, 15, 3], gid="out", label="outax",linewidth=10
     )
+    
     plt.xlim([1.25, 3])
     plt.ylim([4.0, 10.0])
     plt.legend()
