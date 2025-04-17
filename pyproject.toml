@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ltoolx"
-version = "0.1.2"
+version = "0.1.3"
 description = "Common tool packaging"
 authors = ["jchl <you@example.com>"]
 license = "LICENSE"
