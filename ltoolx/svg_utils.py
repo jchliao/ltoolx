@@ -114,12 +114,11 @@ def _svg_windows(svg_content):
     for g_tag in soup.find_all("g", id="out"):
         # 保留path标签，删除其他标签
         path_tag_tmp = Tag(name="path")
+        defs_tag = Tag(name="defs")
         for path_tag in g_tag.find_all("path"):
             if path_tag.get("id") is not None:
                 path_tag_tmp = path_tag.copy_self()
-                defs_tag = Tag(name="defs")
                 defs_tag.append(path_tag_tmp)
-                print(defs_tag)
                 break
         g_tag.replace_with(defs_tag)
         flag_out = True
@@ -254,7 +253,7 @@ if __name__ == "__main__":
     plt.axes(axes_class=AA.Axes)
     plt.plot([1, 2, 3], [3, 5, 4], label="inax", marker="s")
     plt.plot(
-        [1, 2, 3], [5, 15, 3], gid="out", label="outax", linestyle="--", marker="o"
+        [1, 2, 3], [5, 15, 3], gid="out", label="outax", linestyle="--"
     )
     plt.xlim([1.25, 3])
     plt.ylim([4.0, 10.0])
