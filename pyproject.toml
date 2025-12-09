@@ -7,31 +7,32 @@ requires-python = ">=3.12"
 
 authors = [
   { name = "jchl" },
+  { name = "riverflows2333" },
 ]
 
 license = { file = "LICENSE" }
 
 dependencies = [
-  "numpy>=2.2.3,<3.0.0",
-  "matplotlib>=3.10.0,<4.0.0",
-  "lxml>=5.3.1,<6.0.0",
-  "beautifulsoup4>=4.13.3,<5.0.0",
-  "pywin32>=223,<224",
-  "matplotlib-inline>=0.1.7,<0.2.0",
-  "ipython>=8.32.0,<9.0.0",
-  "gurobipy>11",
+  "numpy",
+  "matplotlib",
+  "lxml",
+  "beautifulsoup4",
+  "pywin32; sys_platform == 'win32'",
+  "matplotlib-inline",
+  "ipython",
+  "gurobipy",
 ]
 
 [project.urls]
 Homepage = "https://github.com/jchliao/ltoolx"
 Repository = "https://github.com/jchliao/ltoolx"
 
-# 如果未来有命令行入口，可以在这里加：
+# CLI（如未来需要）
 # [project.scripts]
 # ltoolx = "ltoolx.cli:main"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
   "pytest",
 ]
 

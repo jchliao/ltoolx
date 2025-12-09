@@ -3,4 +3,5 @@ dist/
 *.pyc
 *.bak
 *.vsdx
+.venv
 __pycache__
