@@ -2,11 +2,12 @@ from bs4 import BeautifulSoup, Tag
 from matplotlib.pyplot import gcf
 import io
 from pathlib import Path
-import win32com.client
+import sys
 import matplotlib.pyplot as plt
 import copy
 from matplotlib.figure import Figure
-
+if sys.platform == "win32":
+    import win32com.client
 
 class Svg:
     visio = None
