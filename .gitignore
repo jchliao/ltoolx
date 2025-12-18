@@ -5,3 +5,4 @@ dist/
 *.vsdx
 .venv
 __pycache__
+*.lock
