@@ -3,6 +3,5 @@ dist/
 *.pyc
 *.bak
 *.vsdx
+.venv
 __pycache__
-
-*.jpg
