@@ -4,3 +4,5 @@ dist/
 *.bak
 *.vsdx
 __pycache__
+
+*.jpg
